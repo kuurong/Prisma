@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @default(autoincrement()) @id
+  username String @unique
+  displayName String? @default("")
+  userSetting UserSetting? // 1 to 1 (one to one)
+  posts Post[] // 1 to Many (one to Many)
+  groupPosts UserOnGroupPosts[] // Many to Many 
+}
+model GroupPost { // 포스트 하나에 author(user) 여러명
+  id Int @default(autoincrement()) @id
+  title String
+  description String
+  users UserOnGroupPosts[]
+}
+
+model UserOnGroupPosts { //Many to Many
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  groupPost GroupPost @relation(fields: [groupPostId], references: [id])
+  groupPostId Int
+  @@id([userId, groupPostId])
+}
+
+model UserSetting { // one to one
+  id Int @default(autoincrement()) @id
+  notificationsOn Boolean
+  smsEnabled Boolean
+  user User @relation(fields: [userId],references: [id])
+  userId Int @unique // 외래키 foreign key
+}
+
+model Post {
+  id Int @default(autoincrement()) @id
+  title String
+  description String
+  user User @relation(fields: [userId],references: [id])
+  userId Int
+} 
